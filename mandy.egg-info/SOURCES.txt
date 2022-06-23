@@ -1,0 +1,14 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+mandy/ReadFormFactor.py
+mandy/SelectionRule.py
+mandy/__init__.py
+mandy/crystalBuilder.py
+mandy/diffraction.py
+mandy/requestNIST.py
+mandy.egg-info/PKG-INFO
+mandy.egg-info/SOURCES.txt
+mandy.egg-info/dependency_links.txt
+mandy.egg-info/top_level.txt
