@@ -5,6 +5,7 @@ setup.py
 mandy/ReadFormFactor.py
 mandy/SelectionRule.py
 mandy/__init__.py
+mandy/atomic_data.csv
 mandy/crystalBuilder.py
 mandy/diffraction.py
 mandy/requestNIST.py
