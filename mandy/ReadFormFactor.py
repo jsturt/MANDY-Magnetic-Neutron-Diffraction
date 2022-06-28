@@ -1,4 +1,5 @@
 import math
+import pathlib
 import numpy as np
 
 """
@@ -25,7 +26,7 @@ def form_factor_coeffs(element, order):
     """
     
     # reading file
-    filename = "FormFactorData.dat"
+    filename = pathlib.Path(__file__).parent.joinpath("FormFactorData.dat")
     fFactor = open(filename,"rt")
     
     values = [line for i,line in enumerate(fFactor) if all(elem in line for elem in [element,order]) ]

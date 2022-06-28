@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import pathlib
 from crystals import Crystal
 from gemmi import cif
 
@@ -72,8 +73,8 @@ def build(cifPath):
     print('----------------------------------------------------------------------------------------------')
     
     #mainly work with crystals package here to take the coordinates with their atomic number and just change 9 -> 'F', 28 -> 'Ni', etc
-
-    atomicData = pd.read_csv(r'atomic_data.csv')
+    csvFilePath = pathlib.Path(__file__).parent.joinpath("atomic_data.csv")
+    atomicData = pd.read_csv(csvFilePath)
     atomicData = atomicData.set_index('AtomicNumber')
     
     #Create this empty list that will contain all the symbols and later we will set this as an index for df2

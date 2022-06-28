@@ -2,6 +2,7 @@ LICENSE
 MANIFEST.in
 README.md
 setup.py
+mandy/FormFactorData.dat
 mandy/ReadFormFactor.py
 mandy/SelectionRule.py
 mandy/__init__.py
