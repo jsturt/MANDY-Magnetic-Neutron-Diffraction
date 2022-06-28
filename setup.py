@@ -6,4 +6,5 @@ setup(
   author = 'John Sturt',
   author_email = 'john.sturt.2018@live.rhul.ac.uk',
   packages = find_packages(),
+  package_data = {'mandy':['atomic_data.csv', 'FormFactorData.dat']},
   ) 
