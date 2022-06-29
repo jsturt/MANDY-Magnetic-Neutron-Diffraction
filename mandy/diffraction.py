@@ -57,8 +57,8 @@ def magnetic_calc(n,qSDW,name,L,S,positions,moments,millerIndices,kSpaceLengths,
     norm = RFF.form_factor_squared(name,0,L,S) 
     
     # Modulate the moment sizes with a cosine wave.
-    momentList = [np.array( moments.loc[ row4[0] ] )[2] * math.cos(2 * math.pi * (np.array(row4[3]) + i)* qSDW ) for i in range(n) for row4 in positions.itertuples() ]           
-    # mom.append( current_moment * cos(2pi * (cpos + supercell index) * wavevector) )
+    # momentList = [np.array( moments.loc[ row4[0] ] )[2] * math.cos(2 * math.pi * (np.array(row4[3]) + i)* qSDW ) for i in range(n) for row4 in positions.itertuples() ]           
+    # # mom.append( current_moment * cos(2pi * (cpos + supercell index) * wavevector) )
     
     for h, hVal in enumerate(millerIndices[0]):
         for k, kVal in enumerate(millerIndices[1]):
@@ -66,7 +66,16 @@ def magnetic_calc(n,qSDW,name,L,S,positions,moments,millerIndices,kSpaceLengths,
                 # Skip the (000) index as it cannot be seen experimentally and leads to div by zero in the calculations.
                 if(hVal==0 and lVal==kVal and kVal==hVal):
                     continue
-    
+                
+                # tempMomentList = [np.array( moments.loc[ row[0] ] ) * sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),kSpaceAngles,kSpaceLengths) for row in positions.itertuples() ]           
+                # mom.append( current_moment * selection rule )
+                for i in range(n):
+                    for row in positions.itertuples():
+                        moment = np.array( moments.loc[ row[0] ] )[2]  # Recover moment from dataframe
+                        selRule = sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),kSpaceAngles,kSpaceLengths) # Find selection rule wrt the current Miller index
+                        momentList.append( moment*selRule * math.cos(2 * math.pi * (np.array(row[3]) + i) * qSDW ) ) # Implement SDW with selection rule 
+                # mom.append( current_moment * selection rule * cos(2pi * (cpos + supercell index) * wavevector )
+
                 [sfExp.append( (np.dot(loopval, [ hVal, kVal, lVal ] )))  for loopval in values ] # Calculating the argument of the structure factor exponential.
 
                 # Calculate the structure factor, taking into account the moment size
@@ -82,11 +91,8 @@ def magnetic_calc(n,qSDW,name,L,S,positions,moments,millerIndices,kSpaceLengths,
                 qMag = np.sqrt(np.dot(qActual,qActual)) / (4 * np.pi)
                 
                 # Append the Bragg peak to the list and modulate it by the selection rule
-                braggIntensity.append(round((RFF.form_factor_squared(name,qMag,L,S) / norm) * sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),kSpaceAngles,kSpaceLengths) * abs(sf_sdw / n)**2, 8))
-                # braggIntensity.append(sr.selection_rule(moment_dir,( [ hVal, kVal, lVal ] ),reciprocal_angles,reciprocal_lengths))
-                # braggIntensity.append((RFF.illFormFactorSqd(name_element,qMag,L_element,S_element) / norm))
-                # braggIntensity.append(abs(sf_sdw / n)**2)
-                
+                braggIntensity.append(round((RFF.form_factor_squared(name,qMag,L,S) / norm) * abs(sf_sdw / n)**2, 8))
+
                 braggPosition.append(  [ hVal, kVal, lVal ]  )
                 
     return braggIntensity, braggPosition
