@@ -71,7 +71,7 @@ def magnetic_calc(n,qSDW,name,L,S,positions,moments,millerIndices,kSpaceLengths,
                 # mom.append( current_moment * selection rule )
                 for i in range(n):
                     for row in positions.itertuples():
-                        moment = np.array( moments.loc[ row[0] ] )[2]  # Recover moment from dataframe
+                        moment = np.array( moments.loc[ row[0] ] )#[2]  # Recover moment from dataframe
                         selRule = sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),kSpaceAngles,kSpaceLengths) # Find selection rule wrt the current Miller index
                         momentList.append( moment*selRule * math.cos(2 * math.pi * (np.array(row[3]) + i) * qSDW ) ) # Implement SDW with selection rule 
                 # mom.append( current_moment * selection rule * cos(2pi * (cpos + supercell index) * wavevector )
@@ -91,7 +91,7 @@ def magnetic_calc(n,qSDW,name,L,S,positions,moments,millerIndices,kSpaceLengths,
                 qMag = np.sqrt(np.dot(qActual,qActual)) / (4 * np.pi)
                 
                 # Append the Bragg peak to the list and modulate it by the selection rule
-                braggIntensity.append(round((RFF.form_factor_squared(name,qMag,L,S) / norm) * abs(sf_sdw / n)**2, 8))
+                braggIntensity.append( (RFF.form_factor_squared(name,qMag,L,S) / norm) * np.dot(sf_sdw / n, sf_sdw / n) )
 
                 braggPosition.append(  [ hVal, kVal, lVal ]  )
                 
