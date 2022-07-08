@@ -143,7 +143,7 @@ class mandyCrystal:
         self.reciprocalAngles = reciprocalAngles
         
         
-    def createTransverseSDW(self, qSDW, n=None, direction=np.array([0,0,1])):
+    def createTransverseSDW(self, qSDW, n=None):
         """
         default value of n set to ceiling function of 1 / q
         default direction is in c
@@ -154,7 +154,8 @@ class mandyCrystal:
 
         """
         if(n==None):
-            n=math.ceil(1/qSDW)    # Set default value 
+            q=np.sqrt(qSDW.dot(qSDW))
+            n=math.ceil(1/q)    # Set default value 
         self.n = n
         # print(self.pos_df)    
            
@@ -165,13 +166,13 @@ class mandyCrystal:
         reIndex = pd.Index(self.indices*n, name = 'site_name')
         self.pos_df = pd.DataFrame(values, columns=['x','y','z'], index = reIndex)  # Updating positions dataframe to contain the supercell
         
-
         
         # Assigning the correct moments to each position in the supercell
         momentList = []
         for row in self.pos_df.itertuples():
             moment = np.array( self.mom_df.loc[ row[0] ] )#[2]  # Recover moment from dataframe
-            momentList.append( moment * math.cos(2 * math.pi * (np.array(row[3])) * qSDW ) ) # Implement SDW
+            momentList.append( moment * math.cos(2 * math.pi * np.array(row).dot(qSDW) ) ) # Implement SDW, current_moment * cos(2pi * R.Q)
+            # momentList.append( moment * math.cos(2 * math.pi * (np.array(row[3])) * qSDW ) ) # Implement SDW
             
         self.mom_df = pd.DataFrame(momentList, columns=['m1','m2','m3'])  # Updating positions dataframe to contain the supercell  
 

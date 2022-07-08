@@ -53,11 +53,8 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
                 # Skip the (000) index as it cannot be seen experimentally and leads to div by zero in the calculations.
                 if(hVal==0 and lVal==kVal and kVal==hVal):
                     continue
-                
-                # tempMomentList = [np.array( moments.loc[ row[0] ] ) * sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),angles,lengths) for row in positions.itertuples() ]           
-                # mom.append( current_moment * selection rule )
 
-                   
+                                   
                 selRule = sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),crystalObj.reciprocalAngles,crystalObj.reciprocalLengths) # Find selection rule wrt the current Miller index
                 
                 momentList = [np.array(mom) * selRule for mom in moments]
