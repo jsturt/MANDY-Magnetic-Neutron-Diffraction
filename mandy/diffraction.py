@@ -40,6 +40,7 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
     
     # Recover the magnetic supercell
     values = [row[1:4] for row in crystalObj.pos_df.itertuples()]
+
     moments = [row[1:4] for row in crystalObj.mom_df.itertuples()]
 
     # Find the Q = 0 value of the form factor such that it can be normalised
@@ -58,16 +59,16 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
 
                    
                 selRule = sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),crystalObj.reciprocalAngles,crystalObj.reciprocalLengths) # Find selection rule wrt the current Miller index
-                momentList = [mom * selRule for mom in moments]
-
-
+                
+                momentList = [np.array(mom) * selRule for mom in moments]
+                
                 [sfExp.append( (np.dot(loopval, [ hVal, kVal, lVal ] )))  for loopval in values ] # Calculating the argument of the structure factor exponential.
 
                 # Calculate the structure factor, taking into account the moment size
                 sf_sdw = 0
                 for number in range(len(sfExp)): # Run over the 120 values in momentList and sfExp
                     sf_sdw += momentList[number] * cmath.exp( complex(0, -2 * cmath.pi * sfExp[number] ))
-                    
+                
                 sfExp = []  # Clear sfExp for use in the next loop
                 
                 # Find q in A^-1 for use with the form factor
@@ -76,7 +77,7 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
                 qMag = np.sqrt(np.dot(qActual,qActual)) / (4 * np.pi)
                 
                 # Append the Bragg peak to the list and modulate it by the selection rule
-                braggIntensity.append( (RFF.form_factor_squared(name,qMag,L,S) / norm) * np.dot(sf_sdw, sf_sdw) )
+                braggIntensity.append( (RFF.form_factor_squared(name,qMag,L,S) / norm) * np.dot(sf_sdw / crystalObj.n, sf_sdw / crystalObj.n) )
 
                 braggPosition.append(  [ hVal, kVal, lVal ]  )
                 

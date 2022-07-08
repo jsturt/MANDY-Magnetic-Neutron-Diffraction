@@ -10,6 +10,7 @@ from gemmi import cif
 class mandyCrystal:
     def __init__(self,cifpath):
         self.cifPath = cifpath
+        self.n = 1
     
     def build(self):    
         """
@@ -154,7 +155,7 @@ class mandyCrystal:
         """
         if(n==None):
             n=math.ceil(1/qSDW)    # Set default value 
-           
+        self.n = n
         # print(self.pos_df)    
            
         # Create the positions supercell
@@ -175,15 +176,7 @@ class mandyCrystal:
         self.mom_df = pd.DataFrame(momentList, columns=['m1','m2','m3'])  # Updating positions dataframe to contain the supercell  
 
         
-        
-        
-        
-    def createLongitudinalSDW(self, q, n, direction):
-        print('do something')
-        
-        
-        
-        
+
         
         
         
