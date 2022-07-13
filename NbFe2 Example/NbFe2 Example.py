@@ -3,6 +3,7 @@ import numpy as np
 
 import mandy as md
 
+
 #=======================#===============================================================================================================
 #                       #
 #   User Parameters:    #
@@ -10,18 +11,20 @@ import mandy as md
 #########################
 
 n=10    # number of unit cells used to construct the supercell
-qSDW = 0.0     # Periodicity of magnetic order in the c direction
+qSDW = np.array([0,0,0.1])     # Periodicity of magnetic order in the c direction
 
 # Set up the magnetic site
 nameElement = 'Fe2'
-# L_element = 2 
-# S_element = 2 
+L_element = 0
+S_element = 2.5 
 
-L_element, S_element = md.requestNIST.find_L_S(nameElement)
+# L_element, S_element = [0,2.5] # md.requestNIST.find_L_S(nameElement)
 
 momentDir = np.array([0,0,1])
 
-Q = [ [1], [0], [0,1,2,3,4,5,6,7,8,9] ] # Miller indices to be investigated in each direction
+# Q = [ [1], [0], [0,1,2,3,4,5,6,7,8,9] ] # Miller indices to be investigated in each direction
+Q = [ [0, 1], [0], [-0.1, 0.1, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1] ] # Miller Indicies to be investigated in each direction
+
 
 
 #=======================#===============================================================================================================
@@ -30,11 +33,13 @@ Q = [ [1], [0], [0,1,2,3,4,5,6,7,8,9] ] # Miller indices to be investigated in e
 #                       #
 #########################
 
-# Recover relevant parameters from CIF file
-new_pos, mom_df, reciprocalLengths, reciprocalAngles = md.crystalBuilder.build(r'NbFe2_mp-568901_primitive.cif')
+# Build the crystal object
+crys = md.mandyCrystal.mandyCrystal(r'C:\Users\John\Documents\Uni\2022_Internship\Python_Code\MANDY-Magnetic-Neutron-Diffraction-off-axis-moments\NbFe2 Example\NbFe2_mp-568901_primitive.cif')
+crys.build()
+crys.createSDW(qSDW)
 
 # Perform diffraction calculation
-braggIntensity, braggPosition = md.diffraction.magnetic_calc(n,qSDW,nameElement,L_element,S_element,new_pos,mom_df,Q,reciprocalLengths,reciprocalAngles,momentDir)
+braggIntensity, braggPosition = md.diffraction.magnetic_calc(crys,nameElement,L_element,S_element,Q,momentDir)
 
 
 #=======================#===============================================================================================================
@@ -49,7 +54,7 @@ r = np.arange(len(braggIntensity))
 r1 = r+(bw)
 
 
-plt.bar(r1, braggIntensity,zorder=3,label='q = {}\nwith moments: \n{}'.format(qSDW,str(np.array(mom_df.reset_index))[85:-1]),width=bw,color=(0.9,0.9,1.0,1),edgecolor='black',hatch='//')
+plt.bar(r1, braggIntensity,zorder=3, width=bw,color=(0.9,0.9,1.0,1),edgecolor='black',hatch='//')
 
 # Plotting Configuration
 plt.rcParams["figure.figsize"] = (15,8)
