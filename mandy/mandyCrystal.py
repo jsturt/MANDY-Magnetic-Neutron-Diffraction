@@ -143,7 +143,7 @@ class mandyCrystal:
         self.reciprocalAngles = reciprocalAngles
         
         
-    def createTransverseSDW(self, qSDW, n=None):
+    def createSDW(self, qSDW, n=None):
         """
         default value of n set to ceiling function of 1 / q
         default direction is in c
@@ -153,17 +153,19 @@ class mandyCrystal:
         None.
 
         """
-        if(n==None):
-            q=np.sqrt(qSDW.dot(qSDW))
+        q=np.sqrt(qSDW.dot(qSDW))
+        if(n==None and q>=0.01):
             n=math.ceil(1/q)    # Set default value 
+            print('Using n={}'.format(n))
+        elif(n==None and q<0.01):    # Prevent automatically generating 100s of unit cells
+            n=1
+            print('|qSDW| < 0.01, setting n=1 to prevent generation of 100s of unit cells. If this is a mistake please specify the kwarg "n".')
         self.n = n
-        # print(self.pos_df)    
            
         # Create the positions supercell
-        values = []
-        [values.append(np.array(row3[1:4]) + np.array([0,0,i]) ) for i in range(n) for row3 in self.pos_df.itertuples() ]     
+        values = [ np.array(row3[1:4] + np.array([0,0,i]) ) for i in range(n) for row3 in self.pos_df.itertuples() ]     
          
-        reIndex = pd.Index(self.indices*n, name = 'site_name')
+        reIndex = pd.Index(self.indices*n, name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
         self.pos_df = pd.DataFrame(values, columns=['x','y','z'], index = reIndex)  # Updating positions dataframe to contain the supercell
         
         
@@ -171,8 +173,7 @@ class mandyCrystal:
         momentList = []
         for row in self.pos_df.itertuples():
             moment = np.array( self.mom_df.loc[ row[0] ] )#[2]  # Recover moment from dataframe
-            momentList.append( moment * math.cos(2 * math.pi * np.array(row).dot(qSDW) ) ) # Implement SDW, current_moment * cos(2pi * R.Q)
-            # momentList.append( moment * math.cos(2 * math.pi * (np.array(row[3])) * qSDW ) ) # Implement SDW
+            momentList.append( moment * math.cos(2 * math.pi * np.array(row[1:4]).dot(qSDW) ) ) # Implement SDW, current_moment * cos(2pi * R.Q)
             
         self.mom_df = pd.DataFrame(momentList, columns=['m1','m2','m3'])  # Updating positions dataframe to contain the supercell  
 

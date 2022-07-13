@@ -11,6 +11,7 @@ mandy/atomic_data.csv
 mandy/diffraction.py
 mandy/mandyCrystal.py
 mandy/requestNIST.py
+mandy/test.py
 mandy.egg-info/PKG-INFO
 mandy.egg-info/SOURCES.txt
 mandy.egg-info/dependency_links.txt

@@ -33,7 +33,7 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
 
     """
     momentList = [] 
-    sfExp = []
+    # sfExp = []
     values = []
     braggIntensity = []
     braggPosition = []
@@ -59,7 +59,8 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
                 
                 momentList = [np.array(mom) * selRule for mom in moments]
                 
-                [sfExp.append( (np.dot(loopval, [ hVal, kVal, lVal ] )))  for loopval in values ] # Calculating the argument of the structure factor exponential.
+                sfExp = [(np.dot(loopval, [ hVal, kVal, lVal ] ))  for loopval in values ] # Calculating the argument of the structure factor exponential.
+                # [sfExp.append( (np.dot(loopval, [ hVal, kVal, lVal ] )))  for loopval in values ] # Calculating the argument of the structure factor exponential.
 
                 # Calculate the structure factor, taking into account the moment size
                 sf_sdw = 0

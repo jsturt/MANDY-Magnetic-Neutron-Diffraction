@@ -21,7 +21,9 @@ def find_L_S(name):
     
     try:
         x = requests.get(url) # Send request to NIST database
-        
+        if('Unrecognized token.' in x.text):
+            raise NameError('Unrecognised Token "{}".'.format(name))
+            
         x = x.text.splitlines()[1].split('\t') # Remove formatting
         x = [elem.replace('"','') for elem in x] # Remove quotation marks
         x = list(filter(None,x))[:-1] # Remove empty elements and ionisation energy collumn
@@ -32,6 +34,11 @@ def find_L_S(name):
         
     except requests.exceptions.RequestException as e:
         print('Could not reach NIST database :\n',e)
+        termSymbol = '3P'
+        print('Using L,S = 1')
+        
+    except NameError as e:
+        print(e)
         termSymbol = '3P'
         print('Using L,S = 1')
 
