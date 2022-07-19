@@ -74,8 +74,8 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
                 # Find the magnitude of q, divide by 4pi to match (sin theta / lambda) = (q / 4pi)
                 qMag = np.sqrt(np.dot(qActual,qActual)) / (4 * np.pi)
                 
-                # Append the Bragg peak to the list and modulate it by the selection rule
-                braggIntensity.append( (RFF.form_factor_squared(name,qMag,L,S) / norm) * np.dot(sf_sdw / crystalObj.n, sf_sdw / crystalObj.n) )
+                # Append the Bragg peak to the list and modulate it by the selection rule            
+                braggIntensity.append( (RFF.form_factor_squared(name,qMag,L,S) / norm) * (sf_sdw / crystalObj.n) * np.conj( sf_sdw / crystalObj.n) )
 
                 braggPosition.append(  [ hVal, kVal, lVal ]  )
                 
