@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.optimize as sc
 
 import mandy as md
 
@@ -11,14 +12,14 @@ import mandy as md
 #########################
 
 n=10    # number of unit cells used to construct the supercell
-qSDW = np.array([0,0,0.1])     # Periodicity of magnetic order in the c direction
+qSDW = np.array([0,0,0.1])     # Propagation vector of the magnetic order
 
 # Set up the magnetic site
 nameElement = 'Fe2'
-L_element = 0
-S_element = 2.5 
+# L_element = 0
+# S_element = 2.5 
 
-# L_element, S_element = [0,2.5] # md.requestNIST.find_L_S(nameElement)
+L_element, S_element = md.requestNIST.find_L_S(nameElement)
 
 momentDir = np.array([0,0,1])
 
@@ -34,9 +35,23 @@ Q = [ [0, 1], [0], [-0.1, 0.1, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1] ] # Miller Indicies
 #########################
 
 # Build the crystal object
-crys = md.mandyCrystal.mandyCrystal(r'C:\Users\John\Documents\Uni\2022_Internship\Python_Code\MANDY-Magnetic-Neutron-Diffraction-off-axis-moments\NbFe2 Example\NbFe2_mp-568901_primitive.cif')
+crys = md.mandyCrystal.mandyCrystal(r'NbFe2_Edit.cif')
 crys.build()
-crys.createSDW(qSDW)
+
+crys.createSDW(qSDW,n=1)
+
+# 3D Plot
+fig = plt.figure(figsize=(12, 12))
+ax = fig.add_subplot(projection='3d')
+
+def cols(sitename):
+    if(sitename=='Fe2a'):return 'w';
+    if(sitename=='Fe6h'):return 'k';
+    if(sitename=='Nb'):return 'w';
+
+[ax.scatter(row[1],row[2],row[3],color=cols(row[0]),label='{}'.format(row[0])) for row in crys.pos_df.itertuples()]
+ax.view_init(elev=90, azim=-90)
+plt.show()
 
 # Perform diffraction calculation
 braggIntensity, braggPosition = md.diffraction.magnetic_calc(crys,nameElement,L_element,S_element,Q,momentDir)
@@ -53,8 +68,8 @@ bw = 0.35
 r = np.arange(len(braggIntensity))
 r1 = r+(bw)
 
-
-plt.bar(r1, braggIntensity,zorder=3, width=bw,color=(0.9,0.9,1.0,1),edgecolor='black',hatch='//')
+fig2, ax2 = plt.subplots()
+# ax2.bar(r1, braggIntensity,zorder=3, width=bw,color=(0.9,0.9,1.0,1),edgecolor='black',hatch='//')
 
 # Plotting Configuration
 plt.rcParams["figure.figsize"] = (15,8)
@@ -73,10 +88,30 @@ plt.ylabel('Bragg intensity', fontsize=16)
 plt.xticks(rotation = 45)
 plt.show()
 
+
+
 #=======================================================================================================================================
 
 
 
+
+#Scipy minimising
+def fitfunc(ratio, nameObj, L_obj, S_Obj, momObj):
+    newQ = [ [1], [0], [0.1] ]
+
+    crystalObj = md.mandyCrystal.mandyCrystal(r'NbFe2_mp-568901_primitive.cif')
+    crystalObj.build()
+
+    crystalObj.mom_df.at['Fe6h','m3']=ratio
+    
+    crystalObj.createSDW(qSDW)
+    
+    I, P = md.diffraction.magnetic_calc(crystalObj, nameObj, L_obj, S_Obj, newQ, momObj)
+    return I[0]
+
+
+# res = sc.minimize(fitfunc,1,args=(nameElement,L_element,S_element,momentDir))
+# print(res)
 
 
 
@@ -90,16 +125,21 @@ plt.show()
 
 
 # Loop to find optimal moments to minimise the [1,0,0.1] peak
-# MomentRatios = [n/4 for n in range(-6*4,1*4+1)]
+# MomentRatios = [n/4 for n in range(-1*4,1*4+1)]
 # Q = [ [1], [0], [0.1] ]
 # newBragg = []
 # newPos = ["1 : {}".format(word) for word in MomentRatios]
 
-# for mom in MomentRatios:
-#     mom_df.at['Fe6h','m3']=mom
-#     braggIntensity, braggPosition = magnetic_calc(nameElement,L_element,S_element,new_pos,mom_df,Q,reciprocalLengths,reciprocalAngles,momentDir)
-#     newBragg.append(braggIntensity[0])
-
+# def minfunc(ratios, newQ, nameObj, L_obj, S_Obj, momObj):
+#     for mom in MomentRatios:
+#         crystalObj = md.mandyCrystal.mandyCrystal(r'NbFe2_mp-568901_primitive.cif')
+#         crystalObj.build()
+#         crystalObj.mom_df.at['Fe6h','m3']=mom
+#         crystalObj.createSDW(qSDW)
+#         I, P = md.diffraction.magnetic_calc(crystalObj, nameObj, L_obj, S_Obj, newQ, momObj)
+#         newBragg.append(I[0])
+#     return newBragg
+# newBragg = minfunc(MomentRatios,[[1],[0],[0.1]],nameElement,L_element,S_element,momentDir)
 # plt.bar(MomentRatios,newBragg,zorder=3,width=bw/2,color=(0.9,0.9,1,1),edgecolor='black',hatch=' //')
 
 # #Scipy minimising
