@@ -40,7 +40,14 @@ class mandyCrystal:
         block = doc.sole_block()
         # Read CIF file to facilitate extraction of lattice parameters
         crystalData = Crystal.from_cif(self.cifPath)
-        # Storing calculated reciprocal lattice parameters 
+        # Storing lattice parameters 
+        self.a1, self.a2, self.a3 = crystalData.lattice_vectors
+        # a1 = np.array(a1)
+        # a2 = np.array(a2)
+        # a3 = np.array(a3)
+        
+        print(np.round(self.a1,3),' ',np.round(self.a2,3),' ',np.round(self.a3,3))
+
         reciprocalLengths = np.array(crystalData.reciprocal.lattice_parameters[0:3])
         reciprocalAngles = np.array(crystalData.reciprocal.lattice_parameters[3:6])
         
@@ -125,10 +132,20 @@ class mandyCrystal:
         
         print('----------------------------------------------------------------------------------------------')
         
-       
-        pos_df['site_name'] = newIndex   #create a new column called newIndex
-        pos_df = pos_df.set_index('site_name') #Now change its index to newIndex
+        # Convert fractional coordinates to cartesian coordinates
         
+        pos_df.reset_index(inplace=True,drop=True)
+        for i,row in enumerate(pos_df.itertuples()):
+             cartesianArray = np.array((np.array(pos_df.loc[i].x).dot(self.a1)) + (np.array(pos_df.loc[i].y).dot(self.a2)) + (np.array(pos_df.loc[i].z).dot(self.a3)))
+             pos_df.at[i,'x'] = cartesianArray[0]
+             pos_df.at[i,'y'] = cartesianArray[1]
+             pos_df.at[i,'z'] = cartesianArray[2]
+        # print(pos_df)
+        
+        
+            
+        pos_df['site_name'] = newIndex   #create a new column called newIndex
+        pos_df = pos_df.set_index('site_name') #Now change its index to newIndex  
         # Extract data for given sites as follows:
         # new_pos.loc[['Fe6h']]
         
@@ -163,9 +180,16 @@ class mandyCrystal:
         self.n = n
            
         # Create the positions supercell
-        values = [ np.array(row3[1:4] + np.array([0,0,i]) ) for i in range(n) for row3 in self.pos_df.itertuples() ]     
+        values = [ np.array(row3[1:4] + np.array([0,0,i]) ) for i in range(n) for row3 in self.pos_df.itertuples() ]    
+        # Add unit cells in a and b directions
+        aDir = [row + self.a1 for row in values]
+        bDir = [row + self.a2 for row in values]
+        abDir = [row + self.a1 + self.a2 for row in values]
+        values = values + aDir + bDir + abDir
          
-        reIndex = pd.Index(self.indices*n, name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
+        # reIndex = pd.Index(self.indices*n, name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
+        reIndex = pd.Index(self.indices*4*n, name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
+
         self.pos_df = pd.DataFrame(values, columns=['x','y','z'], index = reIndex)  # Updating positions dataframe to contain the supercell
         
         
