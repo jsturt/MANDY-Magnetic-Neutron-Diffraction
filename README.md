@@ -5,6 +5,7 @@ A python package in development for the simulation of magnetic neutron diffracti
 - pandas
 - numpy
 - matplotlib
+- plotly
 - os
 - crystals
 - gemmi
