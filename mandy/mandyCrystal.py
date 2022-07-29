@@ -10,7 +10,7 @@ from gemmi import cif
 class mandyCrystal:
     def __init__(self,cifpath):
         self.cifPath = cifpath
-        self.n = 1
+        #self.n = np.array([1,1,1])
     
     def build(self):    
         """
@@ -42,12 +42,7 @@ class mandyCrystal:
         crystalData = Crystal.from_cif(self.cifPath)
         # Storing lattice parameters 
         self.a1, self.a2, self.a3 = crystalData.lattice_vectors
-        # a1 = np.array(a1)
-        # a2 = np.array(a2)
-        # a3 = np.array(a3)
         
-        print(np.round(self.a1,3),' ',np.round(self.a2,3),' ',np.round(self.a3,3))
-
         reciprocalLengths = np.array(crystalData.reciprocal.lattice_parameters[0:3])
         reciprocalAngles = np.array(crystalData.reciprocal.lattice_parameters[3:6])
         
@@ -140,9 +135,6 @@ class mandyCrystal:
              pos_df.at[i,'x'] = cartesianArray[0]
              pos_df.at[i,'y'] = cartesianArray[1]
              pos_df.at[i,'z'] = cartesianArray[2]
-        # print(pos_df)
-        
-        
             
         pos_df['site_name'] = newIndex   #create a new column called newIndex
         pos_df = pos_df.set_index('site_name') #Now change its index to newIndex  
@@ -159,7 +151,6 @@ class mandyCrystal:
         self.reciprocalLengths = reciprocalLengths
         self.reciprocalAngles = reciprocalAngles
         
-        
     def createSDW(self, qSDW, n=None):
         """
         default value of n set to ceiling function of 1 / q
@@ -169,26 +160,28 @@ class mandyCrystal:
         -------
         None.
 
-        """
-        q=np.sqrt(qSDW.dot(qSDW))
-        if(n==None and q>=0.01):
-            n=math.ceil(1/q)    # Set default value 
-            print('Using n={}'.format(n))
-        elif(n==None and q<0.01):    # Prevent automatically generating 100s of unit cells
-            n=1
-            print('|qSDW| < 0.01, setting n=1 to prevent generation of 100s of unit cells. If this is a mistake please specify the kwarg "n".')
-        self.n = n
-           
-        # Create the positions supercell
-        values = [ np.array(row3[1:4] + np.array([0,0,i]) ) for i in range(n) for row3 in self.pos_df.itertuples() ]    
-        # Add unit cells in a and b directions
-        aDir = [row + self.a1 for row in values]
-        bDir = [row + self.a2 for row in values]
-        abDir = [row + self.a1 + self.a2 for row in values]
-        values = values + aDir + bDir + abDir
+       """
+        
+        # n is a [3x1] numpy array, want to set each component to 1/q
+        tempN = []
+        for i in range(3) :
+            if(n is None and qSDW[i]>=0.01):
+                tempN.append(math.ceil(1/qSDW[i]))  # Set value based upon the propagation vector, prevent fractional unit cells from being produced.
+                print('Using n{}={}'.format(['x','y','z'][i],tempN[i]))
+            elif(n is None and qSDW[i]<0.01):       # Prevent automatically generating 100s of unit cells
+                tempN.append(1)
+                print('qSDW < 0.01 ({0}-dir), setting n{0}=1 to prevent generation of 100s of unit cells. If this is a mistake please specify the arg "n" ([3,1] numpy array).'.format(*['x','y','z'][i]))
+        self.n = np.array(tempN)
+
+        values = [ np.array(row3[1:4]) for row3 in self.pos_df.itertuples() ]    
+
+        # Add unit cells in a,b,c directions
+        values += [row + self.a1*(ix+1) for ix in range(self.n[0]-1) for row in values if self.n[0]>1] 
+        values += [row + self.a2*(iy+1) for iy in range(self.n[1]-1) for row in values if self.n[1]>1] 
+        values += [row + self.a3*(iz+1) for iz in range(self.n[2]-1) for row in values if self.n[2]>1] 
+ 
          
-        # reIndex = pd.Index(self.indices*n, name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
-        reIndex = pd.Index(self.indices*4*n, name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
+        reIndex = pd.Index(self.indices*np.prod(self.n), name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
 
         self.pos_df = pd.DataFrame(values, columns=['x','y','z'], index = reIndex)  # Updating positions dataframe to contain the supercell
         
