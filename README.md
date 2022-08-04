@@ -1,5 +1,5 @@
 # Magnetic-Neutron-Diffraction (MaND-y)
-A python package in development for the simulation of magnetic neutron diffraction from crystals generated with extended CIF files.
+A python package in development for the simulation of magnetic neutron diffraction from crystals generated with CIF files.
 
 # Requirements
 - pandas
