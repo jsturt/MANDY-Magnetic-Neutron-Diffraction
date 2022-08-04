@@ -1,10 +1,24 @@
+import plotly.graph_objects as go
+import plotly.express as px
 import pandas as pd
 import numpy as np
 import math
 import os
 import pathlib
+from dataclasses import dataclass
 from crystals import Crystal
 from gemmi import cif
+
+
+@dataclass
+class site:
+    """
+    Encapsulates the information about a magnetic site
+    """
+    moment: list 
+    name: str = 'Fe2'
+    label: str = 'Fe2a'
+
 
 
 class mandyCrystal:
@@ -164,14 +178,17 @@ class mandyCrystal:
         
         # n is a [3x1] numpy array, want to set each component to 1/q
         tempN = []
-        for i in range(3) :
-            if(n is None and qSDW[i]>=0.01):
-                tempN.append(math.ceil(1/qSDW[i]))  # Set value based upon the propagation vector, prevent fractional unit cells from being produced.
-                print('Using n{}={}'.format(['x','y','z'][i],tempN[i]))
-            elif(n is None and qSDW[i]<0.01):       # Prevent automatically generating 100s of unit cells
-                tempN.append(1)
-                print('qSDW < 0.01 ({0}-dir), setting n{0}=1 to prevent generation of 100s of unit cells. If this is a mistake please specify the arg "n" ([3,1] numpy array).'.format(*['x','y','z'][i]))
-        self.n = np.array(tempN)
+        if(n is None):
+            for i in range(3) :
+                if(qSDW[i]>=0.01):
+                    tempN[i] = math.ceil(1/qSDW[i])     # Set value based upon the propagation vector, prevent fractional unit cells from being produced.
+                    print('Using n{}={}'.format(['x','y','z'][i],tempN[i]))
+                else:                                   # Prevent automatically generating 100s of unit cells
+                    tempN[i] = 1
+                    print('qSDW < 0.01 ({0}-dir), setting n{0}=1 to prevent generation of 100s of unit cells. If this is a mistake please specify the arg "n" ([3,1] numpy array).'.format(*['x','y','z'][i]))
+            self.n = np.array(tempN)
+        else:
+            self.n = n
 
         values = [ np.array(row3[1:4]) for row3 in self.pos_df.itertuples() ]    
 
@@ -194,7 +211,26 @@ class mandyCrystal:
             
         self.mom_df = pd.DataFrame(momentList, columns=['m1','m2','m3'])  # Updating positions dataframe to contain the supercell  
 
-        
+
+    def plotCrystal(self, moment_scale = 0.6, aspect_ratio = dict(x=1, y=1, z=1)):
+        scatter_points = px.scatter_3d(self.pos_df.reset_index(),x='x',y='y',z='z',color='site_name',size_max=2)
+        scatter_points.update_layout(
+                            scene_aspectmode='manual',
+                            scene_aspectratio=aspect_ratio)
+        scatter_points.add_trace(go.Cone(
+            x = np.array(self.pos_df.x),
+            y = np.array(self.pos_df.y),
+            z = np.array(self.pos_df.z),
+            u = np.array(self.mom_df.m1),
+            v = np.array(self.mom_df.m2),
+            w = np.array(self.mom_df.m3),
+            sizemode = "absolute",
+            sizeref = moment_scale,
+            anchor = "tail",
+            colorscale = "blues",
+            hoverinfo = 'skip'))
+        scatter_points.update_traces(showscale=False, selector=dict(type='cone'))
+        scatter_points.show()
 
         
         
@@ -229,3 +265,4 @@ class mandyCrystal:
         
     
             
+
