@@ -5,6 +5,7 @@ import numpy as np
 import scipy.optimize as sc
 
 import mandy as md
+from mandy import mandyCrystal as mc
 
 
 #=======================#===============================================================================================================
@@ -37,10 +38,15 @@ Q = [ [0, 1], [0], [-0.1, 0.1, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1] ] # Miller Indicies
 #########################
 
 # Build the crystal object
-crys = md.mandyCrystal.mandyCrystal(r'NbFe2_mp-568901_primitive.cif')
+nb = mc.site(moment = [0,0,0], name = 'Nb0', label = 'Nb')
+fe2a = mc.site(moment = [0,0,1], name = 'Fe2', label = 'Fe2a')
+fe6h = mc.site(moment = [0,0,0.56], name = 'Fe1', label='Fe6h')
+
+crys = mc.mandyCrystal(r'NbFe2_mp-568901_primitive.cif')
 crys.build()
 
-crys.createSDW(qSDW)
+#crys.createSDW(qSDW)
+crys.createSDW(np.array([0,0,0]),n)
 
 # Perform diffraction calculation
 braggIntensity, braggPosition = md.diffraction.magnetic_calc(crys,nameElement,L_element,S_element,Q,momentDir)
@@ -52,36 +58,7 @@ braggIntensity, braggPosition = md.diffraction.magnetic_calc(crys,nameElement,L_
 #                       #
 #########################
 
-# 3D Plot
-#fig = plt.figure(figsize=(12, 12))
-#ax = fig.add_subplot(projection='3d')
-
-#def cols(sitename):
-#    if(sitename=='Fe2a'):return 'b';
-#    if(sitename=='Fe6h'):return 'k';
-#    if(sitename=='Nb'):return 'y';
-
-#[ax.scatter(row[1],row[2],row[3],color=cols(row[0]),label='{}'.format(row[0])) for row in crys.pos_df.itertuples()]
-#ax.view_init(elev=90, azim=-90)
-#scaling = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
-#ax.auto_scale_xyz(*[[np.min(scaling), np.max(scaling)]]*3)
-#plt.show()
-
-scatter_points = px.scatter_3d(crys.pos_df.reset_index(),x='x',y='y',z='z',color='site_name',size_max=2)
-scatter_points.update_layout(scene_aspectmode='manual',
-                  scene_aspectratio=dict(x=1, y=1, z=10))
-scatter_points.add_trace(go.Cone(
-    x = np.array(crys.pos_df.x),
-    y = np.array(crys.pos_df.y),
-    z = np.array(crys.pos_df.z),
-    u = np.array(crys.mom_df.m1),
-    v = np.array(crys.mom_df.m2),
-    w = np.array(crys.mom_df.m3),
-    sizemode = "absolute",
-    sizeref = 0.6,
-    anchor = "tail"))
-
-scatter_points.show()
+crys.plotCrystal()
 
 # Intensity Plot
 braggNames = [str(word) for word in braggPosition]
