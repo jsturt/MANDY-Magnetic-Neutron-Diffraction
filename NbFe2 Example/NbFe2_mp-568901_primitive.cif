@@ -37,15 +37,3 @@ loop_
   Fe  Fe10  1  0.65976800  0.82988400  0.75000000  1
   Fe  Fe11  1  0.17011600  0.82988400  0.75000000  1
 
-loop_
-_atom_site_moment.label
-_atom_site_moment.crystalaxis_x
-_atom_site_moment.crystalaxis_y 
-_atom_site_moment.crystalaxis_z
-Nb  0.000  0.000  0.000 #4
-Fe2a  0  0  1   #2a 
-#Fe6h  0  0  -0.75  #6h
-Fe6h  0  0  -2.355  #6h
-
-
-

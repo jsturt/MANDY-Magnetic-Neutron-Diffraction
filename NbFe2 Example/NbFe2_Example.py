@@ -17,14 +17,15 @@ from mandy import mandyCrystal as mc
 n = np.array([1,1,1])    # number of unit cells used to construct the supercell
 qSDW = np.array([0,0,0.1])     # Propagation vector of the magnetic order
 
-# Set up the magnetic site
-nameElement = 'Fe2'
-# L_element = 0
-# S_element = 2.5 
+# Set up the magnetic sites
 
-L_element, S_element = md.requestNIST.find_L_S(nameElement)
+nb = mc.site(moment = [0,0,0], l_s = md.requestNIST.find_L_S('Nb0'), name = 'Nb0', label = 'Nb')
+fe2a = mc.site(moment = [0,0,1], l_s = md.requestNIST.find_L_S('Fe2'), name = 'Fe2', label = 'Fe2a')
+fe6h = mc.site(moment = [0,0,0.573], l_s = md.requestNIST.find_L_S('Fe2'), name = 'Fe2', label='Fe6h')
 
-momentDir = np.array([0,0,1])
+# nameElement = 'Fe2'
+# (L_element,S_element) = md.requestNIST.find_L_S(nameElement)
+# momentDir = np.array([0,0,1])
 
 # Q = [ [1], [0], [0,1,2,3,4,5,6,7,8,9] ] # Miller indices to be investigated in each direction
 Q = [ [0, 1], [0], [-0.1, 0.1, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1] ] # Miller Indicies to be investigated in each direction
@@ -38,18 +39,14 @@ Q = [ [0, 1], [0], [-0.1, 0.1, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1] ] # Miller Indicies
 #########################
 
 # Build the crystal object
-nb = mc.site(moment = [0,0,0], name = 'Nb0', label = 'Nb')
-fe2a = mc.site(moment = [0,0,1], name = 'Fe2', label = 'Fe2a')
-fe6h = mc.site(moment = [0,0,0.56], name = 'Fe1', label='Fe6h')
-
-crys = mc.mandyCrystal(r'NbFe2_mp-568901_primitive.cif')
+crys = mc.mandyCrystal(r'NbFe2_mp-568901_primitive.cif', [nb,fe2a,fe6h])
 crys.build()
 
-#crys.createSDW(qSDW)
-crys.createSDW(np.array([0,0,0]),n)
+crys.createSDW(qSDW)
+# crys.createSDW(np.array([0,0,0]),n)
 
 # Perform diffraction calculation
-braggIntensity, braggPosition = md.diffraction.magnetic_calc(crys,nameElement,L_element,S_element,Q,momentDir)
+braggIntensity, braggPosition = md.diffraction.magnetic_calc(crys,Q)
 
 
 #=======================#===============================================================================================================
@@ -58,7 +55,7 @@ braggIntensity, braggPosition = md.diffraction.magnetic_calc(crys,nameElement,L_
 #                       #
 #########################
 
-crys.plotCrystal()
+crys.plotCrystal(moment_scale = 0.6, aspect_ratio = dict(x=1, y=1, z=10))
 
 # Intensity Plot
 braggNames = [str(word) for word in braggPosition]
@@ -94,22 +91,22 @@ plt.show()
 
 
 #Scipy minimising
-def fitfunc(ratio, nameObj, L_obj, S_Obj, momObj):
+def fitfunc(ratio):
     newQ = [ [1], [0], [0.1] ]
 
-    crystalObj = md.mandyCrystal.mandyCrystal(r'NbFe2_mp-568901_primitive.cif')
+    crystalObj = md.mandyCrystal.mandyCrystal(r'NbFe2_mp-568901_primitive.cif',[nb,fe2a,fe6h])
     crystalObj.build()
 
     crystalObj.mom_df.at['Fe6h','m3']=ratio
     
     crystalObj.createSDW(qSDW)
     
-    I, P = md.diffraction.magnetic_calc(crystalObj, nameObj, L_obj, S_Obj, newQ, momObj)
+    I, P = md.diffraction.magnetic_calc(crystalObj, newQ)
     return I[0]
 
 
-#res = sc.minimize(fitfunc,1,args=(nameElement,L_element,S_element,momentDir))
-#print(res)
+# res = sc.minimize(fitfunc,1)
+# print(res)
 
 
 
