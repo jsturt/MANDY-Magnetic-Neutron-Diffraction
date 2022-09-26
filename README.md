@@ -1,5 +1,5 @@
 # Magnetic-Neutron-Diffraction (MaND-y)
-A python package in development for the simulation of magnetic neutron diffraction from crystals generated with CIF files.
+A python (3.7+) package in development for the simulation of magnetic neutron diffraction from crystals generated with CIF files.
 
 # Requirements
 - pandas
@@ -21,4 +21,4 @@ A python package in development for the simulation of magnetic neutron diffracti
 `pip install -e c:\users\john\documents\mandy`
 # NbFe2 Example
 - Download the directory `MANDY-Magnetic-Neutron-Diffraction/NbFe2 Example/`
-- Contained are the example .py file, site names file, and NbFe2 extended CIF file.
+- Contained are the example .py file, site names file, and NbFe2 CIF file.
