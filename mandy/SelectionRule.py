@@ -44,6 +44,8 @@ def selection_rule(inA,inB,ang,sid):
         Sin squared value of the true angle between the two vectors.
 
     """
+    threshold=0.005
+    if(np.sum(inA)<threshold or np.sum(inB)<threshold):return 0     # Prevent div by zero for small vectors entered.
     # Convert angles to radians
     ang = np.radians(ang)
     # Rotation and scaling of the axes

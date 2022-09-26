@@ -46,5 +46,4 @@ def find_L_S(name):
     # Interpreting the term symbol
     S = (float(termSymbol[0]) - 1) / 2
     L = term_letters.index(termSymbol[1])
-    return L,S
-
+    return (L,S)

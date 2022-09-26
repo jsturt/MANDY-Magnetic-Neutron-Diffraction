@@ -7,22 +7,16 @@ import math,cmath
 Sub-routine to perform the diffraction calculation.
 """
 
-def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
+def magnetic_calc(crystalObj,millerIndices):
     """
     Performs the diffraction calculation.
     
     Parameters
     ----------
-    name : STRING
-        Site name to be used in the simulated.
-    L : FLOAT
-        L Quantum number corresponding to the site.
-    S : FLOAT
-        S Quantum number corresponding to the site.
+    crystalObj : mandyCrystal object
+        Object which contains the crystal on which the simulation is conducted.
     millerIndices : LIST
         List of Miller Indices to be simulated in each direction.
-    momentOrientation : NUMPY ARRAY (3,1)
-        Direction along which the moments are aligned.
 
     Returns
     -------
@@ -32,21 +26,24 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
         List of simulated Miller Indices.
 
     """
-    momentList = [] 
-    # sfExp = []
+    momentList = []
     values = []
     braggIntensity = []
     braggPosition = []
-    
+
     # Recover the magnetic supercell
     values = [row[1:4] for row in crystalObj.pos_df.itertuples()]
 
-    moments = [row[1:4] for row in crystalObj.mom_df.itertuples()]
+    moments = [row[0:4] for row in crystalObj.mom_df.itertuples()]
 
-    # Find the Q = 0 value of the form factor such that it can be normalised
-    norm = RFF.form_factor_squared(name,0,L,S) 
-
+    # Lambda function to recover the site from a given label
+    returnsite = lambda label: [site for site in crystalObj.sites if site.label==label]
     
+    # Find the Q = 0 value of the form factor such that it can be normalised
+    dictKeys = [site.label for site in crystalObj.sites]
+    dictVals = [RFF.form_factor(site.name,0,site.l_s[0],site.l_s[1]) for site in crystalObj.sites ]
+    normsDict = dict(zip(dictKeys,dictVals))
+
     for h, hVal in enumerate(millerIndices[0]):
         for k, kVal in enumerate(millerIndices[1]):
             for l, lVal in enumerate(millerIndices[2]):
@@ -54,28 +51,33 @@ def magnetic_calc(crystalObj,name,L,S,millerIndices,momentOrientation):
                 if(hVal==0 and lVal==kVal and kVal==hVal):
                     continue
 
-                                   
-                selRule = sr.selection_rule(momentOrientation,( [ hVal, kVal, lVal ] ),crystalObj.reciprocalAngles,crystalObj.reciprocalLengths) # Find selection rule wrt the current Miller index
-                
-                momentList = [np.array(mom) * selRule for mom in moments]
-                
-                sfExp = [(np.dot(loopval, [ hVal, kVal, lVal ] ))  for loopval in values ] # Calculating the argument of the structure factor exponential.
-                # [sfExp.append( (np.dot(loopval, [ hVal, kVal, lVal ] )))  for loopval in values ] # Calculating the argument of the structure factor exponential.
+                # Find q in A^-1 for use with the form factor
+                qActual = hVal*crystalObj.b1 + kVal*crystalObj.b2 + lVal*crystalObj.b3
 
+                # Find the magnitude of q, divide by 4pi to match (sin theta / lambda) = (q / 4pi)
+                qMag = np.sqrt(np.dot(qActual,qActual)) / (4 * np.pi)
+
+                # Find selection rule at the current Miller index
+                selRule = [sr.selection_rule(mom[1:4],( [ hVal, kVal, lVal ] ),crystalObj.reciprocalAngles,crystalObj.reciprocalLengths) for mom in moments]
+                # Apply the selection rule
+                momentList = [np.array(a[1:4]) * b for a,b in zip(moments,selRule)] 
+                # Calculate the normalised magnetic form factor
+                ffList = [RFF.form_factor(returnsite(mom[0])[0].name, qMag, returnsite(mom[0])[0].l_s[0], returnsite(mom[0])[0].l_s[1]) / normsDict[mom[0]] for mom in moments]
+                # Apply normalised magnetic form factor
+                momentList = [a*b for a,b in zip(momentList, ffList)]
+
+                # Calculating the argument of the structure factor exponential.
+                sfExp = [(np.dot(loopval, [ hVal, kVal, lVal ] ))  for loopval in values ]
+                
                 # Calculate the structure factor, taking into account the moment size
                 sf_sdw = 0
                 for number in range(len(sfExp)): # Run over the 120 values in momentList and sfExp
                     sf_sdw += momentList[number] * cmath.exp( complex(0, -2 * cmath.pi * sfExp[number] ))
-                
+
                 sfExp = []  # Clear sfExp for use in the next loop
-                
-                # Find q in A^-1 for use with the form factor
-                qActual = crystalObj.reciprocalLengths * np.array([ hVal, kVal, lVal ] )
-                # Find the magnitude of q, divide by 4pi to match (sin theta / lambda) = (q / 4pi)
-                qMag = np.sqrt(np.dot(qActual,qActual)) / (4 * np.pi)
-                
-                # Append the Bragg peak to the list and modulate it by the selection rule            
-                braggIntensity.append( (RFF.form_factor_squared(name,qMag,L,S) / norm) * np.real( (sf_sdw / crystalObj.n).dot( np.conj( sf_sdw / crystalObj.n) ) ) )
+                                
+                # Append the Bragg peak to the list   
+                braggIntensity.append( np.real( (sf_sdw).dot(np.conj(sf_sdw) ) ) )
 
                 braggPosition.append(  [ hVal, kVal, lVal ]  )
                 
