@@ -11,6 +11,7 @@ Unless you wish to build the package yourself, pip is the easiest method of inst
 pip install mandy-X.X.tar.gz
 ```
 - You should now be setup to use `mandy`!
+
 ***Requirements should be found by pip but if not they are listed below***
 
 # Requirements
