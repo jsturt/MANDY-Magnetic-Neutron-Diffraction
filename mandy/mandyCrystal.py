@@ -1,5 +1,3 @@
-# import plotly.graph_objects as go
-# import plotly.express as px
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -234,8 +232,6 @@ class mandyCrystal:
             momentList.append(moment.real)
          
         self.mom_df = pd.DataFrame(momentList, columns=['m1','m2','m3'],index=self.pos_df.index.copy())  # Updating positions dataframe to contain the supercell, copy over the indices from pos_df  
-
-
 
 
     #def plotCrystal(self, moment_scale = 0.6, aspect_ratio = dict(x=1, y=1, z=1)):
