@@ -171,7 +171,7 @@ class mandyCrystal:
         self.reciprocalAngles = reciprocalAngles
         
    
-    def createModulation(self, q, u, v, m1=1, m2=1, n=None):
+    def createModulation(self, q, u, v, m1=1, m2=1, n=None, rotate: bool = False):
         """
         default value of n set to ceiling function of 1 / q
         default direction is in c
@@ -216,7 +216,6 @@ class mandyCrystal:
         values += [row + self.a2*(iy+1) for iy in range(self.n[1]-1) for row in values if self.n[1]>1] 
         values += [row + self.a3*(iz+1) for iz in range(self.n[2]-1) for row in values if self.n[2]>1] 
  
-         
         reIndex = pd.Index(self.indices*np.prod(self.n), name = 'site_name')      # self.indices*n tiles the indices n times to allign with the supercell
 
         self.pos_df = pd.DataFrame(values, columns=['x','y','z'], index = reIndex)  # Updating positions dataframe to contain the supercell
@@ -224,36 +223,20 @@ class mandyCrystal:
         
         # Assigning the correct moments to each position in the supercell
         momentList = []
-        for row in self.pos_df.itertuples():
-            m = np.array( self.mom_df.loc[ row[0] ] )  # Recover moment from dataframe
-            moment = (m) * (m1*u + 1j*m2*v) * cmath.exp( complex(0, -(np.dot(q,row[1:4]))) ) ### moment * modulation | removing 2pi factor
-            # moment = np.linalg.norm(m) * (m1*u + 1j*m2*v) * cmath.exp( complex(0, -(np.dot(q,row[1:4]))) ) ### removing 2pi factor
-            # moment = np.linalg.norm(m) * (m1*u + 1j*m2*v) * cmath.exp( complex(0, -2*cmath.pi * (np.dot(q,row[1:4]))) )
-            momentList.append(moment.real)
+        if(rotate):
+            for row in self.pos_df.itertuples():
+                m = np.array( self.mom_df.loc[ row[0] ] )  # Recover moment from dataframe
+                moment = np.linalg.norm(m) * (m1*u + 1j*m2*v) * cmath.exp( complex(0, -(np.dot(q,row[1:4]))) ) ### removing 2pi factor
+                momentList.append(moment.real)
+        else:
+            for row in self.pos_df.itertuples():
+                m = np.array( self.mom_df.loc[ row[0] ] )  # Recover moment from dataframe
+                moment = (m) * (m1*u + 1j*m2*v) * cmath.exp( complex(0, -(np.dot(q,row[1:4]))) ) ### moment * modulation | removing 2pi factor
+                # moment = np.linalg.norm(m) * (m1*u + 1j*m2*v) * cmath.exp( complex(0, -(np.dot(q,row[1:4]))) ) ### removing 2pi factor
+                # moment = np.linalg.norm(m) * (m1*u + 1j*m2*v) * cmath.exp( complex(0, -2*cmath.pi * (np.dot(q,row[1:4]))) )
+                momentList.append(moment.real)
          
         self.mom_df = pd.DataFrame(momentList, columns=['m1','m2','m3'],index=self.pos_df.index.copy())  # Updating positions dataframe to contain the supercell, copy over the indices from pos_df  
-
-
-    #def plotCrystal(self, moment_scale = 0.6, aspect_ratio = dict(x=1, y=1, z=1)):
-    #    scatter_points = px.scatter_3d(self.pos_df.reset_index(),x='x',y='y',z='z',color='site_name',size_max=2)
-    #    scatter_points.update_layout(
-    #                        scene_aspectmode='manual',
-    #                        scene_aspectratio=aspect_ratio)
-    #    scatter_points.add_trace(go.Cone(
-    #        x = np.array(self.pos_df.x),
-    #        y = np.array(self.pos_df.y),
-    #        z = np.array(self.pos_df.z),
-    #        u = np.array(self.mom_df.m1),
-    #        v = np.array(self.mom_df.m2),
-    #        w = np.array(self.mom_df.m3),
-    #        sizemode = "absolute",
-    #        sizeref = moment_scale,
-    #        anchor = "tail",
-    #        colorscale = "blues",
-    #        hoverinfo = 'skip'))
-    #    scatter_points.update_traces(showscale=False, selector=dict(type='cone'))
-    #    scatter_points.show()
-
         
     def plotCrystal(self, moment_scale = 1):
             x = np.array(self.pos_df.x)
