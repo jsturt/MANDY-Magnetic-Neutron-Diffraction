@@ -24,7 +24,7 @@ pip install mandy-X.X.tar.gz
 
 # Examples
 - Download the `Examples` directory. 
-- Contained within are two example projects looking at Spin Density Waves (**SDW**), one for Chromium (**Cr**) and one of Niobium Iron 2 (**NbFe<sub>2</sub>**)
+- Contained within are two example projects, looking at Spin Density Waves (**SDW**) one for Chromium (**Cr**) and one of Niobium Iron 2 (**NbFe<sub>2</sub>**), and one for more generic modulations (Helical/Cycloidal magnetism).
 - Each has .py project files for setting up the structural and magnetic information plus the requirements for the calculations such as:
 	- site-names file (Allows association of any magnetic site to any lattice site)
 	- CIF files for the description of the unit cells
